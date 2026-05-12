@@ -8,7 +8,7 @@
 * 👉 <a href="https://www.mediafire.com/file/4j3fkiyxbmzqlsc/IPTV_Smarters_Pro_v4.0.3_.apk/file" download="filename">Clique aqui para baixar no Android-Versão 2024 Premium</a>
 
 * 👉 <a href="https://tinyurl.com/ycy6wfyp" download="filename">Clique aqui para baixar no Windows</a> 
-* 👉 <a href="https://github.com/gabrielsaimo/Saimo-TV/releases/download/Beta-Tv-box-v06/Beta-Tv-box-v07.apk" download="filename">Clique aqui para baixar Aplicativo Saimo Tv Box</a> 
+* 👉 <a href="https://github.com/gabrielsaimo/Saimo-TV/releases/latest/download/SaimoTV-TVBOX.apk" download="filename">Clique aqui para baixar Aplicativo Saimo Tv Box</a> 
 ### <a href="https://www.virustotal.com" download="filename">Conferir a confiabilidade dos aplicativos no VirusTotal</a> 
 #
 
