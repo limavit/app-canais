@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: iptv-manager-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-iptvdb}
+      POSTGRES_USER: ${POSTGRES_USER:-iptv}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-iptv123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-iptv} -d ${POSTGRES_DB:-iptvdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - iptv-manager
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: iptv-manager-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-iptvdb}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-iptv}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-iptv123}
+      JWT_SECRET: ${JWT_SECRET:-trocar_essa_chave_em_producao_123456}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      UPLOAD_DIR: /app/uploads
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-100MB}
+      MAX_REQUEST_SIZE: ${MAX_REQUEST_SIZE:-100MB}
+      DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-20}
+      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-5}
+      TOMCAT_MAX_THREADS: ${TOMCAT_MAX_THREADS:-200}
+      TOMCAT_MIN_SPARE_THREADS: ${TOMCAT_MIN_SPARE_THREADS:-20}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@admin.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - iptv-manager
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: iptv-manager-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - iptv-manager
+
+volumes:
+  postgres-data:
+  uploads:
+
+networks:
+  iptv-manager:
+    driver: bridge

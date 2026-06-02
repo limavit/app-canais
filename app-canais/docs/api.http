@@ -1,0 +1,70 @@
+@baseUrl = http://localhost:8080
+@email = admin@admin.com
+@password = admin123
+@token = cole_o_token_aqui
+@listId = 1
+@channelId = 1
+
+### Health
+GET {{baseUrl}}/api/health
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Usuario atual
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Criar lista por URL
+POST {{baseUrl}}/api/iptv-lists/url
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Lista remota",
+  "description": "Lista propria ou autorizada",
+  "sourceUrl": "https://example.com/list.m3u8"
+}
+
+### Upload de lista
+POST {{baseUrl}}/api/iptv-lists/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+### Listar listas
+GET {{baseUrl}}/api/iptv-lists
+Authorization: Bearer {{token}}
+
+### Importar lista
+POST {{baseUrl}}/api/iptv-lists/{{listId}}/import
+Authorization: Bearer {{token}}
+
+### Atualizar lista remota
+POST {{baseUrl}}/api/iptv-lists/{{listId}}/refresh
+Authorization: Bearer {{token}}
+
+### Listar canais
+GET {{baseUrl}}/api/channels?size=20
+Authorization: Bearer {{token}}
+
+### Buscar canais
+GET {{baseUrl}}/api/channels/search?term=news
+Authorization: Bearer {{token}}
+
+### Grupos
+GET {{baseUrl}}/api/channels/groups
+Authorization: Bearer {{token}}
+
+### Favoritar
+POST {{baseUrl}}/api/channels/{{channelId}}/favorite
+Authorization: Bearer {{token}}
+
+### Dashboard
+GET {{baseUrl}}/api/dashboard
+Authorization: Bearer {{token}}
