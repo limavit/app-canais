@@ -2,13 +2,13 @@
 
 Sistema web para gerenciamento e reproducao de listas IPTV legitimas, proprias ou autorizadas.
 
-Este repositorio sera desenvolvido de forma atomica por funcionalidade, seguindo as instrucoes do arquivo `CONTEXT.md`.
+O projeto segue desenvolvimento atomico por funcionalidade. O arquivo `CONTEXT.md` e usado como contexto local de desenvolvimento e esta ignorado pelo Git.
 
-## Stack prevista
+## Stack
 
 - Backend: Java 21, Spring Boot 3, Spring Security, JWT, Spring Data JPA, PostgreSQL, Flyway e Maven.
-- Frontend: Angular 18+, TypeScript, Angular Router, Reactive Forms e HLS.js.
-- Infraestrutura: Docker, Docker Compose, PostgreSQL e Nginx opcional para producao.
+- Frontend: Angular, TypeScript, Angular Router, Reactive Forms e HLS.js.
+- Infraestrutura: Docker, Docker Compose, PostgreSQL e Nginx para servir o frontend.
 
 ## Estrutura
 
@@ -16,112 +16,113 @@ Este repositorio sera desenvolvido de forma atomica por funcionalidade, seguindo
 .
 |-- backend/
 |-- frontend/
-|-- docker/
 |-- docs/
 |-- scripts/
-|-- CONTEXT.md
+|-- docker-compose.yml
+|-- .env.example
 `-- README.md
 ```
 
-## Desenvolvimento por modulos
+## Funcionalidades
 
-O desenvolvimento sera entregue em etapas pequenas e verificaveis:
+- Cadastro, login, logout, refresh token e rota `me`.
+- Perfis `ADMIN` e `USER`.
+- Administrador inicial configuravel por variaveis de ambiente.
+- Cadastro de listas IPTV por URL ou upload `.m3u/.m3u8`.
+- Upload com limite configurado para arquivos grandes.
+- Importacao e refresh de listas em background.
+- Parser M3U/M3U8 com categoria, logo, tvg-id, tvg-name e URL do stream.
+- Listagem paginada de canais com busca, categoria, lista de origem e favoritos.
+- Remocao de listas e canais.
+- Player HLS integrado.
+- Teste individual de canal.
+- Teste em lote dos canais filtrados, com fila e limite de concorrencia.
+- Persistencia do ultimo status de teste do canal.
+- Filtro por status de teste: nao testado, online, offline, invalido e indefinido.
+- Dashboard e area administrativa de usuarios.
 
-1. Estrutura base do monorepo.
-2. Backend base com Spring Boot, PostgreSQL, Flyway e Docker.
-3. Autenticacao JWT e modulo de usuarios.
-4. Modulo de listas IPTV.
-5. Parser M3U/M3U8.
-6. Importacao de canais.
-7. Modulo de canais, busca, filtros e favoritos.
-8. Dashboard.
-9. Frontend base com Angular, layout e autenticacao.
-10. Telas de listas, canais e favoritos.
-11. Player HLS.
-12. Area administrativa.
-13. Docker Compose completo, documentacao, exemplos e testes finais.
+## Variaveis de ambiente
 
-## Backend local
-
-O backend base fica em `backend/`.
-
-Para rodar os testes:
+Copie o exemplo antes de subir os containers:
 
 ```bash
-cd backend
-mvn test
+cp .env.example .env
 ```
 
-Para executar a aplicacao localmente, configure um PostgreSQL acessivel pelas variaveis de `.env.example` e rode:
+Edite principalmente:
 
-```bash
-cd backend
-mvn spring-boot:run
+```txt
+POSTGRES_PASSWORD
+JWT_SECRET
+ADMIN_EMAIL
+ADMIN_PASSWORD
 ```
+
+Variaveis uteis para arquivos grandes e concorrencia:
+
+```txt
+MAX_FILE_SIZE=100MB
+MAX_REQUEST_SIZE=100MB
+DB_POOL_MAX_SIZE=20
+DB_POOL_MIN_IDLE=5
+TOMCAT_MAX_THREADS=200
+TOMCAT_MIN_SPARE_THREADS=20
+```
+
+Importante: `.env`, `CONTEXT.md`, chaves, certificados e arquivos locais de producao estao ignorados no Git. Nao versionar segredos reais.
 
 ## Containers
 
-Para subir PostgreSQL e backend via Docker Compose:
+Subir tudo com build:
 
 ```bash
 ./scripts/start-containers.sh
 ```
 
-O frontend fica disponivel em:
+Recriar os containers depois de alteracoes:
 
-```txt
-http://localhost:4200
+```bash
+./scripts/restart-containers.sh
 ```
 
-O backend tambem fica exposto em:
-
-```txt
-http://localhost:8080
-```
-
-Para acompanhar logs:
+Acompanhar logs:
 
 ```bash
 ./scripts/logs-containers.sh
 ```
 
-Para parar os containers:
+Parar:
 
 ```bash
 ./scripts/stop-containers.sh
 ```
 
-Health check do backend:
+URLs:
+
+```txt
+Frontend: http://localhost:4200
+Backend:  http://localhost:8080
+Health:   http://localhost:8080/api/health
+```
+
+Health check:
 
 ```bash
 curl http://localhost:8080/api/health
 ```
 
-## Autenticacao
+## Acesso inicial
 
-Com os containers, o administrador inicial e criado pelas variaveis:
+Por padrao do `.env.example`:
 
 ```txt
 ADMIN_EMAIL=admin@admin.com
 ADMIN_PASSWORD=admin123
 ```
 
-Endpoints ja disponiveis:
+Troque esses valores no `.env` antes de usar fora do ambiente local.
 
-```txt
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/refresh
-POST /api/auth/logout
-GET  /api/auth/me
-
-GET    /api/users
-GET    /api/users/{id}
-PUT    /api/users/{id}
-DELETE /api/users/{id}
-```
-
-Exemplo de login:
+Login via API:
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
@@ -129,9 +130,28 @@ curl -X POST http://localhost:8080/api/auth/login \
   -d '{"email":"admin@admin.com","password":"admin123"}'
 ```
 
-## Listas IPTV
+## API principal
 
-Endpoints ja disponiveis:
+Autenticacao:
+
+```txt
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/me
+```
+
+Usuarios:
+
+```txt
+GET    /api/users
+GET    /api/users/{id}
+PUT    /api/users/{id}
+DELETE /api/users/{id}
+```
+
+Listas IPTV:
 
 ```txt
 POST   /api/iptv-lists/url
@@ -140,9 +160,35 @@ GET    /api/iptv-lists
 GET    /api/iptv-lists/{id}
 PUT    /api/iptv-lists/{id}
 DELETE /api/iptv-lists/{id}
+POST   /api/iptv-lists/{id}/import
+POST   /api/iptv-lists/{id}/refresh
+GET    /api/iptv-lists/{id}/channels
 ```
 
-Exemplo de cadastro por URL:
+Canais:
+
+```txt
+GET    /api/channels
+GET    /api/channels/{id}
+PUT    /api/channels/{id}
+DELETE /api/channels/{id}
+GET    /api/channels/search?term=
+GET    /api/channels/groups
+GET    /api/channels/group/{groupName}
+POST   /api/channels/{id}/favorite
+DELETE /api/channels/{id}/favorite
+GET    /api/channels/favorites
+POST   /api/channels/{id}/test
+POST   /api/channels/test-batch
+```
+
+Dashboard:
+
+```txt
+GET /api/dashboard
+```
+
+Exemplo de cadastro de lista por URL:
 
 ```bash
 curl -X POST http://localhost:8080/api/iptv-lists/url \
@@ -160,69 +206,33 @@ curl -X POST http://localhost:8080/api/iptv-lists/upload \
   -F "file=@docs/examples/sample.m3u"
 ```
 
-## Parser M3U/M3U8
-
-O backend ja possui `M3uParserService`, preparado para extrair canais de listas `.m3u` e `.m3u8`. A importacao para o banco entra no proximo modulo atomico.
-
-## Canais e importacao
-
-Endpoints disponiveis:
-
-```txt
-POST /api/iptv-lists/{id}/import
-POST /api/iptv-lists/{id}/refresh
-
-GET    /api/channels
-GET    /api/channels/{id}
-GET    /api/iptv-lists/{listId}/channels
-PUT    /api/channels/{id}
-DELETE /api/channels/{id}
-
-GET    /api/channels/search?term=
-GET    /api/channels/groups
-GET    /api/channels/group/{groupName}
-
-POST   /api/channels/{id}/favorite
-DELETE /api/channels/{id}/favorite
-GET    /api/channels/favorites
-```
-
-## Dashboard
-
-```txt
-GET /api/dashboard
-```
-
-## Frontend
-
-O frontend Angular possui:
-
-- Login e cadastro.
-- Dashboard.
-- Listagem e cadastro de listas por URL ou upload.
-- Detalhes da lista e acionamento de importacao/refresh.
-- Listagem de canais, busca e favoritos.
-- Player HLS.
-- Area administrativa de usuarios.
-
-Para rodar localmente:
+Exemplo de teste em lote dos canais offline de uma lista:
 
 ```bash
-cd frontend
-npm install
-npm start
+curl -X POST "http://localhost:8080/api/channels/test-batch?listId=1&testStatus=OFFLINE" \
+  -H "Authorization: Bearer SEU_TOKEN"
 ```
 
-Para build:
+## Como usar no frontend
 
-```bash
-cd frontend
-npm run build
-```
+1. Acesse `http://localhost:4200`.
+2. Entre com o usuario admin ou crie uma conta.
+3. Cadastre uma lista por URL ou upload.
+4. Abra a lista e clique em `Importar`.
+5. Enquanto estiver `PROCESSING`, a tela acompanha o status automaticamente.
+6. Abra `Canais` para buscar, filtrar por categoria/lista/status, favoritar, testar ou remover canais.
+7. Use `Testar filtrados` para validar varios canais com fila controlada.
 
-## Testes e validacao
+## Desenvolvimento local
 
 Backend:
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+
+Testes do backend:
 
 ```bash
 cd backend
@@ -230,6 +240,14 @@ mvn test
 ```
 
 Frontend:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Build do frontend:
 
 ```bash
 cd frontend
@@ -242,8 +260,31 @@ Arquivo HTTP para testes manuais:
 docs/api.http
 ```
 
-## Observacoes legais e de seguranca
+## Banco de dados
 
-Este sistema e apenas um gerenciador/reprodutor de listas IPTV. Ele nao fornece canais, conteudo, streams ou listas. O usuario e responsavel por adicionar apenas listas e conteudos que tenha direito de acessar.
+O schema e versionado por Flyway em:
 
-O sistema nao deve burlar autenticacao, DRM, paywall ou qualquer mecanismo de protecao.
+```txt
+backend/src/main/resources/db/migration/
+```
+
+Ao subir o backend, as migrations sao aplicadas automaticamente. A migration `V5` adiciona os campos do ultimo teste dos canais.
+
+## Observacoes de concorrencia
+
+- Importacao e refresh de listas rodam em background.
+- O teste em lote usa fila controlada e testa ate 20 canais em paralelo por lote.
+- O teste de canal e feito do ponto de vista do backend/container.
+- Alguns provedores podem bloquear checagens automaticas; nesses casos, um stream pode aparecer offline mesmo funcionando no player.
+
+## Seguranca
+
+- Nao versionar `.env`, chaves, certificados, tokens ou arquivos de producao.
+- Trocar `JWT_SECRET`, `POSTGRES_PASSWORD` e `ADMIN_PASSWORD` antes de qualquer uso fora do local.
+- Usar apenas listas IPTV proprias, legitimas ou autorizadas.
+
+## Observacoes legais
+
+Este sistema e apenas um gerenciador/reprodutor de listas IPTV. Ele nao fornece canais, conteudo, streams ou listas.
+
+O usuario e responsavel por adicionar apenas listas e conteudos que tenha direito de acessar. O sistema nao deve ser usado para burlar autenticacao, DRM, paywall ou qualquer mecanismo de protecao.
